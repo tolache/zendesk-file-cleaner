@@ -1,6 +1,13 @@
-.env
+# IDEs
 .idea
+*.DotSettings.user
 .junie
 .codex
+.vscode
+
+# .NET
 bin
 obj
+
+# Other
+.env
