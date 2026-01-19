@@ -3,7 +3,7 @@ namespace ZendeskFileCleaner;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-public class ZendeskClient
+public class ZendeskClient : IDisposable
 {
     private readonly HttpClient _zendeskClient;
     
@@ -15,8 +15,15 @@ public class ZendeskClient
         _zendeskClient.DefaultRequestHeaders.Add("User-Agent", "ZendeskFileCleaner");
     }
     
-    public static async Task FetchTicketInfoAsync()
+    // Takes an array of ticket numbers, forms an sends an API request to Zendesk,
+    // and returns an array of closed tickets with closure dates 
+    public async Task FetchTicketInfoAsync(int[] ticketIds)
     {
-        
+        throw new NotImplementedException();
+    }
+
+    public void Dispose()
+    {
+        _zendeskClient.Dispose();
     }
 }
