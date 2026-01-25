@@ -1,66 +1,44 @@
 ﻿using System.CommandLine;
-using System.CommandLine.Parsing;
+using ZendeskFileCleaner;
 
-Option<DirectoryInfo> pathOption = new("--path")
+Argument<DirectoryInfo> pathArg = new("path")
 {
-    Required = true,
-    Description = "The path of the parent directory containing Zendesk ticket directories that need to be cleaned."
+    Arity       = ArgumentArity.ExactlyOne,
+    Description = "The path of the parent directory containing Zendesk ticket directories that need to be cleaned.",
+    Validators  = { CommandLineValidators.ValidatePath }
 };
 Option<string> subdomainOption = new("--subdomain", "-s")
 {
-    Required = true,
-    Description = "Zendesk subdomain (e.g., if your Zendesk domain is 'example.zendesk.com', specify 'example')."
+    Required    = true,
+    Description = "Zendesk subdomain (<subdomain>.zendesk.com).",
+    Validators  = { CommandLineValidators.ValidateSubdomain }
 };
 Option<string> apiKeyOption = new("--api-key", "-a")
 {
-    Required = true,
-    Description = "Zendesk API token."
+    Required    = true,
+    Description = "Zendesk API token.",
+    Validators  = { CommandLineValidators.ValidateApiKey }
 };
 Option<bool> dryRunOption = new("--dry-run", "-n")
 {
     Description = "Print what would be deleted, but do not delete anything."
 };
-Option<bool> verboseOption = new("--verbose", "-v")
-{
-    Description = "Shows verbose output during execution."
-};
-Option<bool> versionOption = new("--version", "-V")
-{
-    Description = "Displays the version information."
-};
 RootCommand rootCommand = new("Removes old Zendesk ticket directories from the disk.")
 {
-    pathOption,
+    pathArg,
     subdomainOption,
     apiKeyOption,
     dryRunOption,
-    verboseOption,
-    versionOption,
 };
 
 rootCommand.SetAction(parseResult =>
 {
-    if (parseResult.Errors.Count == 0 && 
-        parseResult.GetValue(pathOption) is { } parsedPath &&
-        parseResult.GetValue(subdomainOption) is { } subdomain)
-    {
-        Console.WriteLine($"Found the following directories inside {parsedPath.FullName}:");
-        foreach (DirectoryInfo subDirectoryInfo in parsedPath.EnumerateDirectories())
-        {
-            Console.Write($"{subDirectoryInfo.Name} ");
-        }
+    DirectoryInfo path = parseResult.GetValue(pathArg)!;
+    string subdomain   = parseResult.GetValue(subdomainOption)!;
+    string apiKey      = parseResult.GetValue(apiKeyOption)!;
+    bool dryRun        = parseResult.GetValue(dryRunOption);
 
-        Console.WriteLine();
-        return 0;
-    }
-
-    foreach (ParseError error in parseResult.Errors)
-    {
-        Console.Error.WriteLine(error.Message);
-        return 1;
-    }
-
-    return 0;
+    return TicketDirectoryProcessor.ProcessTicketDirectories(path, subdomain, apiKey, dryRun);
 });
 
 return await rootCommand.Parse(args).InvokeAsync();

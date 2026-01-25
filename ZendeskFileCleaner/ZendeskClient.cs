@@ -3,27 +3,30 @@ namespace ZendeskFileCleaner;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-public class ZendeskClient : IDisposable
+public static class ZendeskClient
 {
-    private readonly HttpClient _zendeskClient;
+    private const int ZendeskPerRequestTicketLimit = 100;
     
-    public ZendeskClient(string subdomain, string apiKey)
-    {
-        _zendeskClient = new HttpClient();
-        _zendeskClient.DefaultRequestHeaders.Accept.Clear();
-        _zendeskClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        _zendeskClient.DefaultRequestHeaders.Add("User-Agent", "ZendeskFileCleaner");
-    }
-    
-    // Takes an array of ticket numbers, forms an sends an API request to Zendesk,
+    // Takes an array of ticket numbers, forms and sends an API request to Zendesk,
     // and returns an array of closed tickets with closure dates 
-    public async Task FetchTicketInfoAsync(int[] ticketIds)
+    public static async Task<long[]> FetchTicketInfoAsync(long[] ticketIds, string subdomain, string apiKey)
     {
-        throw new NotImplementedException();
-    }
+        using HttpClient zendeskClient = new();
+        zendeskClient.DefaultRequestHeaders.Accept.Clear();
+        zendeskClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        zendeskClient.DefaultRequestHeaders.Add("User-Agent", "ZendeskFileCleaner");
+        
+        long[] result = [];
+        int chunkCount = (ticketIds.Length + ZendeskPerRequestTicketLimit - 1) / ZendeskPerRequestTicketLimit;
+        for (int i = 0; i < chunkCount; i++)
+        {
+            long[] currentChunk = ticketIds.Skip(ZendeskPerRequestTicketLimit * i).Take(ZendeskPerRequestTicketLimit).ToArray();
+            string currentChunkString = string.Join(",", currentChunk);
+            string uri = $"https://{subdomain}.zendesk.com/api/v2/tickets/show_many.json?ids={currentChunkString}";
+            Console.WriteLine($"Retrieving ticket info from Zendesk, chunk {i + 1} of {chunkCount}.");
+            // var json = await zendeskClient.GetStringAsync($"https://{subdomain}.zendesk.com/api/v2/tickets/show_many.json?ids=")
+        }
 
-    public void Dispose()
-    {
-        _zendeskClient.Dispose();
+        return result;
     }
 }
