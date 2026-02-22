@@ -1,15 +1,20 @@
 namespace ZendeskFileCleaner;
 
-public static class TicketDirectoryProcessor
+public class TicketDirectoryProcessor : ITicketDirectoryProcessor
 {
-    public static async Task<int> ProcessTicketDirectories(DirectoryInfo ticketParentDir, string subdomain, string apiKey, bool dryRun)
+    public async Task<int> ProcessTicketDirectories(
+        DirectoryInfo ticketParentDir,
+        string subdomain,
+        string apiKey,
+        bool dryRun,
+        IZendeskClient zendeskClient)
     {
-        await ZendeskClient.FetchTicketInfoAsync(GetTicketIds(ticketParentDir), subdomain, apiKey);
+        await zendeskClient.FetchTicketInfoAsync(GetTicketIds(ticketParentDir), subdomain, apiKey);
 
         return 0;
     }
 
-    private static long[] GetTicketIds(DirectoryInfo ticketParentDir)
+    private long[] GetTicketIds(DirectoryInfo ticketParentDir)
     {
         List<long> ticketIds = [];
         Console.WriteLine($"Found the following directories with numerical names inside {ticketParentDir.FullName}:");
@@ -24,4 +29,14 @@ public static class TicketDirectoryProcessor
         Console.WriteLine(Environment.NewLine + $"Total of {ticketIds.Count} directories.");
         return ticketIds.ToArray();
     }
+}
+
+public interface ITicketDirectoryProcessor
+{
+    public Task<int> ProcessTicketDirectories(
+        DirectoryInfo ticketParentDir, 
+        string subdomain,
+        string apiKey,
+        bool dryRun, 
+        IZendeskClient zendeskClient);
 }

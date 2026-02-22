@@ -3,13 +3,11 @@ namespace ZendeskFileCleaner;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-public static class ZendeskClient
+public class ZendeskClient : IZendeskClient
 {
     private const int ZendeskPerRequestTicketLimit = 100;
     
-    // Takes an array of ticket numbers, forms and sends an API request to Zendesk,
-    // and returns an array of closed tickets with closure dates 
-    public static async Task<long[]> FetchTicketInfoAsync(long[] ticketIds, string subdomain, string apiKey)
+    public async Task<long[]> FetchTicketInfoAsync(long[] ticketIds, string subdomain, string apiKey)
     {
         using HttpClient zendeskClient = new();
         zendeskClient.DefaultRequestHeaders.Accept.Clear();
@@ -29,4 +27,9 @@ public static class ZendeskClient
 
         return result;
     }
+}
+
+public interface IZendeskClient
+{
+    public Task<long[]> FetchTicketInfoAsync(long[] ticketIds, string subdomain, string apiKey);
 }

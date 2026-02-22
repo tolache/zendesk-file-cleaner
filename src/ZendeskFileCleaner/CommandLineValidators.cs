@@ -24,11 +24,9 @@ public static class CommandLineValidators
 
         foreach (char c in value)
         {
-            if (!char.IsLetterOrDigit(c) && c != '-' && c != '.')
-            {
-                result.AddError($"`--subdomain` may only contain letters, digits, hyphens, and dots.");
-                return;
-            }
+            if (char.IsLetterOrDigit(c) || c == '-' || c == '.') continue;
+            result.AddError("`--subdomain` may only contain letters, digits, hyphens, and dots.");
+            return;
         }
     }
 
