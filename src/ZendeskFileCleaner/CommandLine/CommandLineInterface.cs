@@ -1,6 +1,7 @@
 using System.CommandLine;
+using ZendeskFileCleaner.Zendesk;
 
-namespace ZendeskFileCleaner;
+namespace ZendeskFileCleaner.CommandLine;
 
 public class CommandLineInterface(ITicketDirectoryProcessor processor, IZendeskClient client)
 {
@@ -18,11 +19,17 @@ public class CommandLineInterface(ITicketDirectoryProcessor processor, IZendeskC
             Description = "Zendesk subdomain (<subdomain>.zendesk.com).",
             Validators  = { CommandLineValidators.ValidateSubdomain }
         };
-        Option<string> apiKeyOption = new("--api-key", "-a")
+        Option<string> emailOption = new("--email", "-e")
+        {
+            Required    = true,
+            Description = "Zendesk email.",
+            Validators  = { CommandLineValidators.ValidateEmail }
+        };
+        Option<string> tokenOption = new("--token", "-t")
         {
             Required    = true,
             Description = "Zendesk API token.",
-            Validators  = { CommandLineValidators.ValidateApiKey }
+            Validators  = { CommandLineValidators.ValidateToken }
         };
         Option<bool> dryRunOption = new("--dry-run", "-n")
         {
@@ -32,7 +39,8 @@ public class CommandLineInterface(ITicketDirectoryProcessor processor, IZendeskC
         {
             pathArg,
             subdomainOption,
-            apiKeyOption,
+            emailOption,
+            tokenOption,
             dryRunOption,
         };
 
@@ -40,10 +48,11 @@ public class CommandLineInterface(ITicketDirectoryProcessor processor, IZendeskC
         {
             DirectoryInfo path = parseResult.GetValue(pathArg)!;
             string subdomain   = parseResult.GetValue(subdomainOption)!;
-            string apiKey      = parseResult.GetValue(apiKeyOption)!;
+            string email       = parseResult.GetValue(emailOption)!;
+            string token       = parseResult.GetValue(tokenOption)!;
             bool dryRun        = parseResult.GetValue(dryRunOption);
 
-            return await processor.ProcessTicketDirectories(path, subdomain, apiKey, dryRun, client);
+            return await processor.ProcessTicketDirectories(path, subdomain, email, token, dryRun, client);
         });
         
         return rootCommand;

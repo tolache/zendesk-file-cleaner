@@ -1,6 +1,7 @@
 using System.CommandLine.Parsing;
+using System.ComponentModel.DataAnnotations;
 
-namespace ZendeskFileCleaner;
+namespace ZendeskFileCleaner.CommandLine;
 
 public static class CommandLineValidators
 {
@@ -30,12 +31,31 @@ public static class CommandLineValidators
         }
     }
 
-    public static  void ValidateApiKey(OptionResult result)
+    public static void ValidateEmail(OptionResult result)
     {
         string value = result.GetValueOrDefault<string>();
         if (string.IsNullOrWhiteSpace(value))
         {
-            result.AddError("`--api-key` cannot be empty or whitespace.");
+            result.AddError("`--email` cannot be empty or whitespace.");
+        }
+        EmailAddressAttribute validator = new();
+        if (!validator.IsValid(value))
+        {
+            result.AddError($"'{value}' is not a valid email address.");
+        }
+    }
+    
+    public static void ValidateToken(OptionResult result)
+    {
+        string value = result.GetValueOrDefault<string>();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            result.AddError("`--token` cannot be empty or whitespace.");
+        }
+        
+        if (!value.All(c => c <= 0x7F))
+        {
+            result.AddError("`--token` must contain only ASCII characters.");
         }
     }
 }

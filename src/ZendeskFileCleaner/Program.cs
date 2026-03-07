@@ -2,6 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ZendeskFileCleaner;
+using ZendeskFileCleaner.CommandLine;
+using ZendeskFileCleaner.Zendesk;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSingleton<CommandLineInterface>();
