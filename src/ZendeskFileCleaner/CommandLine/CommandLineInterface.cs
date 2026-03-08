@@ -1,9 +1,10 @@
 using System.CommandLine;
-using ZendeskFileCleaner.Zendesk;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ZendeskFileCleaner.CommandLine;
 
-public class CommandLineInterface(ITicketDirectoryProcessor processor, IZendeskClient client)
+public class CommandLineInterface(IServiceProvider serviceProvider)
 {
     public RootCommand CreateRootCommand()
     {
@@ -31,9 +32,18 @@ public class CommandLineInterface(ITicketDirectoryProcessor processor, IZendeskC
             Description = "Zendesk API token.",
             Validators  = { CommandLineValidators.ValidateToken }
         };
+        Option<long> zdUserIdOption = new("--zd-user-id", "-u")
+        {
+            Required    = true,
+            Description = "Zendesk API token."
+        };
         Option<bool> dryRunOption = new("--dry-run", "-n")
         {
             Description = "Print what would be deleted, but do not delete anything."
+        };
+        Option<bool> verboseOption = new("--verbose", "-v")
+        {
+            Description = "Show debug messages."
         };
         RootCommand rootCommand = new("Removes old Zendesk ticket directories from the disk.")
         {
@@ -41,18 +51,28 @@ public class CommandLineInterface(ITicketDirectoryProcessor processor, IZendeskC
             subdomainOption,
             emailOption,
             tokenOption,
+            zdUserIdOption,
             dryRunOption,
+            verboseOption
         };
 
         rootCommand.SetAction(async parseResult =>
         {
-            DirectoryInfo path = parseResult.GetValue(pathArg)!;
-            string subdomain   = parseResult.GetValue(subdomainOption)!;
-            string email       = parseResult.GetValue(emailOption)!;
-            string token       = parseResult.GetValue(tokenOption)!;
-            bool dryRun        = parseResult.GetValue(dryRunOption);
-
-            return await processor.ProcessTicketDirectories(path, subdomain, email, token, dryRun, client);
+            ApplicationOptions options = new()
+            {
+                RootDir = parseResult.GetValue(pathArg)!,
+                Subdomain = parseResult.GetValue(subdomainOption)!,
+                Email = parseResult.GetValue(emailOption)!,
+                Token = parseResult.GetValue(tokenOption)!,
+                ZdUserId = parseResult.GetValue(zdUserIdOption),
+                IsDryRun = parseResult.GetValue(dryRunOption),
+                MinLevel = parseResult.GetValue(verboseOption) ? LogLevel.Debug : LogLevel.Information
+            };
+            
+            IServiceScope scope = serviceProvider.CreateScope();
+            ITicketDirectoryCleaner cleaner = scope.ServiceProvider.GetRequiredService<ITicketDirectoryCleaner>();
+            
+            return await cleaner.CleanTicketDirectories(options);
         });
         
         return rootCommand;

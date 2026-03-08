@@ -8,7 +8,7 @@ using ZendeskFileCleaner.Zendesk;
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSingleton<CommandLineInterface>();
 builder.Services.AddSingleton<IZendeskClient, ZendeskClient>();
-builder.Services.AddTransient<ITicketDirectoryProcessor, TicketDirectoryProcessor>();
+builder.Services.AddTransient<ITicketDirectoryCleaner, TicketDirectoryCleaner>();
 using IHost host = builder.Build();
 
 CommandLineInterface cli = host.Services.GetRequiredService<CommandLineInterface>();
