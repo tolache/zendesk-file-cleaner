@@ -60,13 +60,13 @@ public class CommandLineInterface(IServiceProvider serviceProvider)
         {
             ApplicationOptions options = new()
             {
-                RootDir = parseResult.GetValue(pathArg)!,
+                RootDir   = parseResult.GetValue(pathArg)!,
                 Subdomain = parseResult.GetValue(subdomainOption)!,
-                Email = parseResult.GetValue(emailOption)!,
-                Token = parseResult.GetValue(tokenOption)!,
-                ZdUserId = parseResult.GetValue(zdUserIdOption),
-                IsDryRun = parseResult.GetValue(dryRunOption),
-                MinLevel = parseResult.GetValue(verboseOption) ? LogLevel.Debug : LogLevel.Information
+                Email     = parseResult.GetValue(emailOption)!,
+                Token     = parseResult.GetValue(tokenOption)!,
+                ZdUserId  = parseResult.GetValue(zdUserIdOption),
+                IsDryRun  = parseResult.GetValue(dryRunOption),
+                MinLevel  = parseResult.GetValue(verboseOption) ? LogLevel.Debug : LogLevel.Information
             };
             
             IServiceScope scope = serviceProvider.CreateScope();
