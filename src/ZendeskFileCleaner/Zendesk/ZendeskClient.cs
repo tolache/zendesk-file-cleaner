@@ -27,9 +27,16 @@ public class ZendeskClient : IZendeskClient
             string currentChunkString = string.Join(",", currentChunk);
             string uri = $"https://{subdomain}.zendesk.com/api/v2/tickets/show_many?ids={currentChunkString}";
             Console.WriteLine($"Retrieving ticket info from Zendesk, chunk {i + 1} of {chunkCount}.");
-            string json = await zendeskClient.GetStringAsync(uri);
-            TicketsResponse? response = JsonSerializer.Deserialize<TicketsResponse>(json);
-            result.AddRange(response?.Tickets ?? Enumerable.Empty<ITicket>());
+            using HttpResponseMessage response = await zendeskClient.GetAsync(uri);
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Zendesk API returned {(int)response.StatusCode} ({response.ReasonPhrase}): {errorContent}", null, response.StatusCode);
+            }
+
+            string json = await response.Content.ReadAsStringAsync();
+            TicketsResponse? ticketsResponse = JsonSerializer.Deserialize<TicketsResponse>(json);
+            result.AddRange(ticketsResponse?.Tickets ?? Enumerable.Empty<ITicket>());
         }
 
         return result;

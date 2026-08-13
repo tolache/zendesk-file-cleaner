@@ -58,21 +58,31 @@ public class CommandLineInterface(IServiceProvider serviceProvider)
 
         rootCommand.SetAction(async parseResult =>
         {
-            ApplicationOptions options = new()
+            try
             {
-                RootDir   = parseResult.GetValue(pathArg)!,
-                Subdomain = parseResult.GetValue(subdomainOption)!,
-                Email     = parseResult.GetValue(emailOption)!,
-                Token     = parseResult.GetValue(tokenOption)!,
-                ZdUserId  = parseResult.GetValue(zdUserIdOption),
-                IsDryRun  = parseResult.GetValue(dryRunOption),
-                MinLevel  = parseResult.GetValue(verboseOption) ? LogLevel.Debug : LogLevel.Information
-            };
-            
-            IServiceScope scope = serviceProvider.CreateScope();
-            ITicketDirectoryCleaner cleaner = scope.ServiceProvider.GetRequiredService<ITicketDirectoryCleaner>();
-            
-            return await cleaner.CleanTicketDirectories(options);
+                ApplicationOptions options = new()
+                {
+                    RootDir   = parseResult.GetValue(pathArg)!,
+                    Subdomain = parseResult.GetValue(subdomainOption)!,
+                    Email     = parseResult.GetValue(emailOption)!,
+                    Token     = parseResult.GetValue(tokenOption)!,
+                    ZdUserId  = parseResult.GetValue(zdUserIdOption),
+                    IsDryRun  = parseResult.GetValue(dryRunOption),
+                    MinLevel  = parseResult.GetValue(verboseOption) ? LogLevel.Debug : LogLevel.Information
+                };
+                
+                IServiceScope scope = serviceProvider.CreateScope();
+                ITicketDirectoryCleaner cleaner = scope.ServiceProvider.GetRequiredService<ITicketDirectoryCleaner>();
+                
+                return await cleaner.CleanTicketDirectories(options);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine(ex.Message);
+                Console.ResetColor();
+                return 1;
+            }
         });
         
         return rootCommand;
